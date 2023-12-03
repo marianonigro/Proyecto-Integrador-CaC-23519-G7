@@ -110,7 +110,53 @@ def delete_producto(id):
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route("/api/productos", methods=["POST"])  # Endpoint para crear un producto
+def create_producto():
+    try:
+        # Validación de entrada
+        required_fields = ["isbn", "titulo", "autor", "categoria", "editorial", "imagen", "precio", "cantidad"]
+        for field in required_fields:
+            if field not in request.json:
+                return jsonify({"error": f"Campo '{field}' es requerido"}), 400
 
+        isbn = int(request.json["isbn"])
+        titulo = request.json["titulo"]
+        autor = request.json["autor"]
+        categoria = request.json["categoria"]
+        editorial = request.json["editorial"]
+        imagen = request.json["imagen"]
+        precio = int(request.json["precio"])
+        cantidad = int(request.json["cantidad"])
+
+        new_producto = Producto(isbn, titulo, autor, categoria, editorial, imagen, precio, cantidad)  # Crea un nuevo objeto Producto con los datos proporcionados
+        db.session.add(new_producto)  # Agrega el nuevo producto a la sesión de la base de datos
+        db.session.commit()  # Guarda los cambios en la base de datos
+        return producto_schema.jsonify(new_producto)  # Retorna el JSON del nuevo producto creado
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/api/productos/<id>", methods=["PUT"])  # Endpoint para actualizar un producto
+def update_producto(id):
+    try:
+        producto = Producto.query.get(id)  # Obtiene el producto existente con el ID especificado
+
+        if producto:
+            # Actualiza los atributos del producto con los datos proporcionados en el JSON
+            producto.isbn = request.json["isbn"]
+            producto.titulo = request.json["titulo"]
+            producto.autor = request.json["autor"]
+            producto.categoria = request.json["categoria"]
+            producto.editorial = request.json["editorial"]
+            producto.imagen = request.json["imagen"]
+            producto.precio = request.json["precio"]
+            producto.cantidad = request.json["cantidad"]
+
+            db.session.commit()  # Guarda los cambios en la base de datos
+            return producto_schema.jsonify(producto)  # Retorna el JSON del producto actualizado
+        else:
+            return jsonify({"message": "Producto no encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)})
     
     
 # Programa Principal: Solo para uso local - Comentar en despliegue -
